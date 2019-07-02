@@ -1,0 +1,9 @@
+galaxy_info:
+  author: Kirill Sumorokov
+  description: Configure Loki server and promtail.
+
+  license: MIT
+
+  min_ansible_version: 2.7
+
+  galaxy_tags: ['loki']

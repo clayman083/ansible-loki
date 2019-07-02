@@ -1,0 +1,25 @@
+---
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+client:
+  url: http://{{ loki.promtail.loki.host }}:{{ loki.promtail.loki.port }}/api/prom/push
+
+scrape_configs:
+{% for job in loki.promtail.jobs %}
+  - job_name: {{ job.name }}
+    entry_parser: raw
+    static_configs:
+    - targets:
+        - localhost
+      labels:
+{% for key, label in job.labels.items() %}
+        {{ key }}: {{ label }}
+{% endfor %}
+        __path__: {{ job.path }}
+{% endfor %}

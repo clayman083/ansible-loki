@@ -1,0 +1,62 @@
+---
+
+version: '3.5'
+
+volumes:
+  data:
+
+{% if loki.contaner.network|default(False) %}
+networks:
+  {{ loki.container.network.name }}:
+    external: true
+{% endif %}
+
+volumes:
+  loki_data:
+
+services:
+{% if loki.server.enabled|default(False) %}
+  server:
+    container_name: {{ loki.container.name }}
+    image: {{ loki.container.image }}
+    command: -config.file=/etc/loki/config.yml
+    dns: {{ loki.container.dns }}
+{% if loki.container.syslog.enabled %}
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "{{ loki.container.syslog.host }}"
+        tag: {{ loki.container.syslog.tag }}
+{% endif %}
+{% if loki.contaner.network|default(False) %}
+    networks:
+      - {{ loki.container.network.name }}
+{% endif %}
+    ports:
+      - {{ loki.host }}:{{ loki.port }}:3100
+    restart: {{ loki.container.restart }}
+    volumes:
+      - ./config.yml:/etc/loki/config.yml
+      - loki_data:/var/lib/loki
+{% endif %}
+
+  promtail:
+    container_name: {{ loki.promtail.container.name }}
+    image: {{ loki.promtail.container.image }}
+    command: -config.file=/etc/promtail/config.yml
+    dns: {{ loki.promtail.container.dns }}
+{% if loki.promtail.container.syslog.enabled %}
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "{{ loki.promtail.container.syslog.host }}"
+        tag: {{ loki.promtail.container.syslog.tag }}
+{% endif %}
+{% if loki.promtail.contaner.network|default(False) %}
+    networks:
+      - {{ loki.promtail.container.network.name }}
+{% endif %}
+    restart: {{ loki.promtail.container.restart }}
+    volumes:
+      - ./promtail.yml:/etc/promtail/config.yml
+      - /var/log:/var/log

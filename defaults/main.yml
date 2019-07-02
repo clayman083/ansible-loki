@@ -1,0 +1,68 @@
+---
+
+loki:
+  dir: "{{ services_dir }}/loki"
+
+  host: "{{ private_network.address }}"
+  port: 3100
+
+  server:
+    enabled: no
+
+  container:
+    image: grafana/loki:v0.1.0
+    name: loki
+    dns: "{{ private_network.address }}"
+    network: ""
+    restart: always
+
+    syslog:
+      enabled: no
+      host: unixgram:///dev/log
+      tag: loki
+
+  service:
+    name: loki
+    tags:
+      - "{{ env }}"
+    meta:
+      hostname: "{{ ansible_hostname }}"
+      tier: "{{ env }}"
+
+  exporter:
+    host: "{{ private_network.address }}"
+    port: 3100
+
+    service:
+      name: loki-exporter
+      tags:
+        - "{{ env }}"
+      meta:
+        hostname: "{{ ansible_hostname }}"
+        tier: "{{ env }}"
+
+  promtail:
+    loki:
+      host: "{{ private_network.address }}"
+      port: 3100
+
+    jobs:
+      - name: syslog
+        labels:
+          job: syslog
+          hostname: "{{ ansible_hostname }}"
+          tier: "{{ env }}"
+        path: /var/log/syslog
+
+    container:
+      image: grafana/promtail:master
+      name: promtail
+      dns: "{{ private_network.address }}"
+      network: ""
+      restart: always
+
+      syslog:
+        enabled: no
+        host: unixgram:///dev/log
+        tag: promtail
+

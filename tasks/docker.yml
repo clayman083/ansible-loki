@@ -1,0 +1,23 @@
+---
+
+- name: Prepare folders
+  file: path={{ item }} state=directory
+  with_items:
+    - "{{ loki.dir }}"
+
+- name: Assemble config files
+  template: src={{ item.src }}.j2 dest={{ item.dest }}
+  with_items:
+    - src: docker-compose.yml
+      dest: "{{ loki.dir }}/docker-compose.yml"
+    - src: promtail.yml
+      dest: "{{ loki.dir }}/promtail.yml"
+  notify: restart loki
+
+- name: Assemble server config
+  template: src={{ item.src }}.j2 dest={{ item.dest }}
+  with_items:
+    - src: config.yml
+      dest: "{{ loki.dir }}/config.yml"
+  when: loki.server.enabled|default(False)
+  notify: restart loki
