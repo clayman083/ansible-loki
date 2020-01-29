@@ -1,9 +1,0 @@
----
-
-- name: Prepare folders
-  file: path={{ item }} state=directory
-  with_items:
-    - "{{ conf_dir }}"
-
-- name: Assemble consul services config
-  template: src=consul.json.j2 dest={{ conf_dir }}/loki.json

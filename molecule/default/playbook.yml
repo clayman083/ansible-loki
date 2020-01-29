@@ -1,0 +1,76 @@
+---
+
+- name: Converge
+  hosts: all
+  become: true
+
+  vars:
+    env: develop
+
+    services_dir: /opt/services
+
+    private_network: "{{ ansible_eth0['ipv4'] }}"
+
+    loki:
+      dir: "{{ services_dir }}/loki"
+
+      server:
+        enabled: yes
+        host: "{{ private_network.address }}"
+        port: 3100
+
+        container:
+          image: grafana/loki:latest
+          name: loki
+          dns: "{{ private_network.address }}"
+          network: ""
+          restart: always
+
+          syslog:
+            enabled: no
+            host: unixgram:///dev/log
+            tag: loki
+
+        exporter:
+          host: "{{ private_network.address }}"
+          port: 3100
+
+      promtail:
+        loki:
+          host: "{{ private_network.address }}"
+          port: 3100
+
+        syslog:
+          host: "{{ private_network.address }}"
+          port: 1514
+
+        jobs:
+          syslog:
+            labels:
+              tier: "{{ env }}"
+          static:
+            - name: postgresql
+              labels:
+                job: postgresql
+                hostname: "{{ ansible_hostname }}"
+                tier: "{{ env }}"
+              path: /var/log/postgresql/postgresql-11-main.log
+
+        container:
+          image: grafana/promtail:latest
+          name: promtail
+          dns: "{{ private_network.address }}"
+          network: ""
+          restart: always
+
+          syslog:
+            enabled: no
+            host: unixgram:///dev/log
+            tag: promtail
+
+  roles:
+    - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') | basename }}"
+
+  tasks:
+    - name: Install test requirements
+      apt: name=curl

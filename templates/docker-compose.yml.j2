@@ -5,9 +5,9 @@ version: '3.5'
 volumes:
   data:
 
-{% if loki.contaner.network|default(False) %}
+{% if loki.server.contaner.network|default(False) %}
 networks:
-  {{ loki.container.network.name }}:
+  {{ loki.server.container.network.name }}:
     external: true
 {% endif %}
 
@@ -17,24 +17,24 @@ volumes:
 services:
 {% if loki.server.enabled|default(False) %}
   server:
-    container_name: {{ loki.container.name }}
-    image: {{ loki.container.image }}
+    container_name: {{ loki.server.container.name }}
+    image: {{ loki.server.container.image }}
     command: -config.file=/etc/loki/config.yml
-    dns: {{ loki.container.dns }}
-{% if loki.container.syslog.enabled %}
+    dns: {{ loki.server.container.dns }}
+{% if loki.server.container.syslog.enabled %}
     logging:
       driver: syslog
       options:
-        syslog-address: "{{ loki.container.syslog.host }}"
-        tag: {{ loki.container.syslog.tag }}
+        syslog-address: "{{ loki.server.container.syslog.host }}"
+        tag: {{ loki.server.container.syslog.tag }}
 {% endif %}
-{% if loki.contaner.network|default(False) %}
+{% if loki.server.contaner.network|default(False) %}
     networks:
-      - {{ loki.container.network.name }}
+      - {{ loki.server.container.network.name }}
 {% endif %}
     ports:
-      - {{ loki.host }}:{{ loki.port }}:3100
-    restart: {{ loki.container.restart }}
+      - {{ loki.server.host }}:{{ loki.server.port }}:3100
+    restart: {{ loki.server.container.restart }}
     volumes:
       - ./config.yml:/etc/loki/config.yml
       - loki_data:/var/lib/loki
@@ -56,6 +56,9 @@ services:
     networks:
       - {{ loki.promtail.container.network.name }}
 {% endif %}
+    ports:
+      - {{ loki.promtail.host }}:{{ loki.promtail.port }}:9080
+      - {{ loki.promtail.syslog.host }}:{{ loki.promtail.syslog.port }}:1514
     restart: {{ loki.promtail.container.restart }}
     volumes:
       - ./promtail.yml:/etc/promtail/config.yml

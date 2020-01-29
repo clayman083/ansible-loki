@@ -3,59 +3,53 @@
 loki:
   dir: "{{ services_dir }}/loki"
 
-  host: "{{ private_network.address }}"
-  port: 3100
-
   server:
     enabled: no
-
-  container:
-    image: grafana/loki:v0.1.0
-    name: loki
-    dns: "{{ private_network.address }}"
-    network: ""
-    restart: always
-
-    syslog:
-      enabled: no
-      host: unixgram:///dev/log
-      tag: loki
-
-  service:
-    name: loki
-    tags:
-      - "{{ env }}"
-    meta:
-      hostname: "{{ ansible_hostname }}"
-      tier: "{{ env }}"
-
-  exporter:
     host: "{{ private_network.address }}"
     port: 3100
 
-    service:
-      name: loki-exporter
-      tags:
-        - "{{ env }}"
-      meta:
-        hostname: "{{ ansible_hostname }}"
-        tier: "{{ env }}"
+    container:
+      image: grafana/loki:latest
+      name: loki
+      dns: "{{ private_network.address }}"
+      network: ""
+      restart: always
+
+      syslog:
+        enabled: no
+        host: unixgram:///dev/log
+        tag: loki
+
+    exporter:
+      host: "{{ private_network.address }}"
+      port: 3100
 
   promtail:
+    host: "{{ private_network.address }}"
+    port: 9080
+
     loki:
       host: "{{ private_network.address }}"
       port: 3100
 
+    syslog:
+      host: "{{ private_network.address }}"
+      port: 1514
+
     jobs:
-      - name: syslog
+      syslog:
         labels:
-          job: syslog
-          hostname: "{{ ansible_hostname }}"
           tier: "{{ env }}"
-        path: /var/log/syslog
+      static:
+        - name: postgresql
+          labels:
+            job: postgresql
+            hostname: "{{ ansible_hostname }}"
+            tier: "{{ env }}"
+          path: /var/log/postgresql/postgresql-11-main.log
 
     container:
-      image: grafana/promtail:master
+      image: grafana/promtail:latest
       name: promtail
       dns: "{{ private_network.address }}"
       network: ""
@@ -65,4 +59,3 @@ loki:
         enabled: no
         host: unixgram:///dev/log
         tag: promtail
-

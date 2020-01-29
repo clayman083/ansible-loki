@@ -11,7 +11,23 @@ client:
   url: http://{{ loki.promtail.loki.host }}:{{ loki.promtail.loki.port }}/api/prom/push
 
 scrape_configs:
-{% for job in loki.promtail.jobs %}
+  - job_name: syslog
+    syslog:
+      listen_address: 0.0.0.0:1514
+      idle_timeout: 60s
+      label_structured_data: yes
+{% if loki.promtail.jobs.syslog.labels|length > 0 %}
+      labels:
+{% for key, label in loki.promtail.jobs.syslog.labels.items() %}
+        {{ key }}: {{ label }}
+{% endfor %}
+{% endif %}
+    relabel_configs:
+      - source_labels: ['__syslog_message_hostname']
+        target_label: 'hostname'
+      - source_labels: ['__syslog_message_app_name']
+        target_label: 'appname'
+{% for job in loki.promtail.jobs.static %}
   - job_name: {{ job.name }}
     entry_parser: raw
     static_configs:
