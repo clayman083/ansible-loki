@@ -2,8 +2,7 @@
 
 version: '3.5'
 
-volumes:
-  data:
+{% if loki.server.enabled|default(False) %}
 
 {% if loki.server.contaner.network|default(False) %}
 networks:
@@ -12,7 +11,8 @@ networks:
 {% endif %}
 
 volumes:
-  loki_data:
+  data:
+{% endif %}
 
 services:
 {% if loki.server.enabled|default(False) %}
@@ -37,7 +37,7 @@ services:
     restart: {{ loki.server.container.restart }}
     volumes:
       - ./config.yml:/etc/loki/config.yml
-      - loki_data:/var/lib/loki
+      - data:/var/lib/loki
 {% endif %}
 
   promtail:
