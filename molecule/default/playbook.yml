@@ -15,19 +15,19 @@
       dir: "{{ services_dir }}/loki"
 
       server:
-        enabled: yes
+        enabled: true
         host: "{{ private_network.address }}"
         port: 3100
 
         container:
-          image: grafana/loki:latest
+          image: grafana/loki:v1.3.0
           name: loki
           dns: "{{ private_network.address }}"
           network: ""
           restart: always
 
           syslog:
-            enabled: no
+            enabled: false
             host: unixgram:///dev/log
             tag: loki
 
@@ -36,6 +36,9 @@
           port: 3100
 
       promtail:
+        host: "{{ private_network.address }}"
+        port: 9080
+
         loki:
           host: "{{ private_network.address }}"
           port: 3100
@@ -48,23 +51,17 @@
           syslog:
             labels:
               tier: "{{ env }}"
-          static:
-            - name: postgresql
-              labels:
-                job: postgresql
-                hostname: "{{ ansible_hostname }}"
-                tier: "{{ env }}"
-              path: /var/log/postgresql/postgresql-11-main.log
+          static: []
 
         container:
-          image: grafana/promtail:latest
+          image: grafana/promtail:v1.3.0
           name: promtail
           dns: "{{ private_network.address }}"
           network: ""
           restart: always
 
           syslog:
-            enabled: no
+            enabled: false
             host: unixgram:///dev/log
             tag: promtail
 
