@@ -12,7 +12,8 @@ loki:
       image: grafana/loki:latest
       name: loki
       dns: "{{ private_network.address }}"
-      network: ""
+      networks: []
+      labels: []
       restart: always
 
       syslog:
@@ -52,7 +53,8 @@ loki:
       image: grafana/promtail:latest
       name: promtail
       dns: "{{ private_network.address }}"
-      network: ""
+      networks: []
+      labels: []
       restart: always
 
       syslog:

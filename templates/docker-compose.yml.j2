@@ -2,14 +2,19 @@
 
 version: '3.5'
 
-{% if loki.server.enabled|default(False) %}
-
-{% if loki.server.contaner.network|default(False) %}
+{% if loki.server.container.networks|default([]) or loki.promtail.container.networks|default([]) %}
 networks:
-  {{ loki.server.container.network.name }}:
+{% for network in loki.server.container.networks|default([]) %}
+  {{ network.name }}:
     external: true
+{% endfor %}
+{% for network in loki.promtail.container.networks|default([]) %}
+  {{ network.name }}:
+    external: true
+{% endfor %}
 {% endif %}
 
+{% if loki.server.enabled|default(False) %}
 volumes:
   data:
 {% endif %}
@@ -20,7 +25,15 @@ services:
     container_name: {{ loki.server.container.name }}
     image: {{ loki.server.container.image }}
     command: -config.file=/etc/loki/config.yml
+{% if loki.server.container.dns %}
     dns: {{ loki.server.container.dns }}
+{% endif %}
+{% if loki.server.container.labels %}
+    labels:
+{% for label in loki.server.container.labels|default([]) %}
+      - {{ label }}
+{% endfor %}
+{% endif %}
 {% if loki.server.container.syslog.enabled %}
     logging:
       driver: syslog
@@ -28,9 +41,11 @@ services:
         syslog-address: "{{ loki.server.container.syslog.host }}"
         tag: {{ loki.server.container.syslog.tag }}
 {% endif %}
-{% if loki.server.contaner.network|default(False) %}
+{% if loki.server.container.networks %}
     networks:
-      - {{ loki.server.container.network.name }}
+{% for network in loki.server.container.networks %}
+      - {{ network.name }}
+{% endfor %}
 {% endif %}
     ports:
       - {{ loki.server.host }}:{{ loki.server.port }}:3100
@@ -44,7 +59,15 @@ services:
     container_name: {{ loki.promtail.container.name }}
     image: {{ loki.promtail.container.image }}
     command: -config.file=/etc/promtail/config.yml
+{% if loki.promtail.container.dns %}
     dns: {{ loki.promtail.container.dns }}
+{% endif %}
+{% if loki.promtail.container.labels %}
+    labels:
+{% for label in loki.promtail.container.labels|default([]) %}
+      - {{ label }}
+{% endfor %}
+{% endif %}
 {% if loki.promtail.container.syslog.enabled %}
     logging:
       driver: syslog
@@ -52,9 +75,11 @@ services:
         syslog-address: "{{ loki.promtail.container.syslog.host }}"
         tag: {{ loki.promtail.container.syslog.tag }}
 {% endif %}
-{% if loki.promtail.contaner.network|default(False) %}
+{% if loki.promtail.container.networks %}
     networks:
-      - {{ loki.promtail.container.network.name }}
+{% for network in loki.promtail.container.networks %}
+      - {{ network.name }}
+{% endfor %}
 {% endif %}
     ports:
       - {{ loki.promtail.host }}:{{ loki.promtail.port }}:9080

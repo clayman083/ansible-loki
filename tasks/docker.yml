@@ -21,3 +21,11 @@
       dest: "{{ loki.dir }}/config.yml"
   when: loki.server.enabled|default(False)
   notify: restart loki
+
+- name: Assemble syslog config
+  template: src={{ item.src }}.j2 dest={{ item.dest }}
+  with_items:
+    - src: syslog.conf
+      dest: "/etc/rsyslog.d/promtail.conf"
+  when: loki.server.enabled|default(False)
+  notify: restart syslog

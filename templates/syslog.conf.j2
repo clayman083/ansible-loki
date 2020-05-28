@@ -1,0 +1,1 @@
+action(type="omfwd" protocol="tcp" target="{{ loki.promtail.syslog.host }}" port="{{ loki.promtail.syslog.port }}" Template="RSYSLOG_SyslogProtocol23Format" TCP_Framing="octet-counted")

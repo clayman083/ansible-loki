@@ -5,3 +5,9 @@
   args:
     chdir: "{{ loki.dir }}"
   listen: "restart loki"
+
+- name: Restart syslog
+  systemd:
+    name: rsyslog
+    state: restarted
+  listen: "restart syslog"
